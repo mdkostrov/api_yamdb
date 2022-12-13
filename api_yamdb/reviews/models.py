@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from titles.validators import validate_username
+from reviews.validators import validate_username
 
 ADMIN = 'admin'
 MODERATOR = 'moderator'

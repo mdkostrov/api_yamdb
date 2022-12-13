@@ -7,7 +7,7 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from api.v1.permissions import IsAuthorOrSAFE
 from api.v1.serializers import UserSerializer
-from titles.models import User
+from reviews.models import User
 
 
 class UserViewSet(ModelViewSet):

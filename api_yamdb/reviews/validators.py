@@ -9,7 +9,6 @@ def validate_username(value):
             params={'value': value},
         )
     if fullmatch(r'[\w.@+_-]+', value) is None:
-        print(fullmatch(r'[\w.@+_-]+', value))
         raise ValidationError(
             'В имени пользователя допускаются только '
             'буквы, цифры и @/./+/-/_ знаки.',

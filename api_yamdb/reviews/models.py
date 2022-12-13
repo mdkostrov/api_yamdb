@@ -51,6 +51,11 @@ class User(AbstractUser):
         max_length=150,
         blank=True,
     )
+    confirmation_code = models.CharField(
+        'Код подтверждения',
+        max_length=150,
+        blank=True,
+    )
 
     class Meta:
         ordering = ('id',)
@@ -71,20 +76,3 @@ class User(AbstractUser):
     @property
     def is_user(self):
         return self.role == USER
-
-
-class ConfirmationCodes(models.Model):
-    """Модель для хранения информации о кодах подтверждения.
-    Одновременно может быть только один активный код."""
-    confirmation_code = models.CharField(
-        'Код подтверждения',
-        max_length=150,
-        blank=False,
-        unique=True,
-    )
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        primary_key=True,
-    )
-

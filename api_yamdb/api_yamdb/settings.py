@@ -22,7 +22,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'api',
-    'titles',
+    'reviews',
     'django_filters',
 ]
 
@@ -67,7 +67,7 @@ DATABASES = {
     }
 }
 
-AUTH_USER_MODEL = 'titles.User'
+AUTH_USER_MODEL = 'reviews.User'
 # Password validation
 
 AUTH_PASSWORD_VALIDATORS = [

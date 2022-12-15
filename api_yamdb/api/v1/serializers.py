@@ -1,5 +1,3 @@
-from abc import ABC
-
 from rest_framework import serializers
 
 from reviews.models import User
@@ -18,14 +16,22 @@ class UserSerializer(serializers.ModelSerializer):
             'role',
         )
 
+    def update(self, instance, validated_data):
+        if 'role' not in self.initial_data:
+            return super().update(instance, validated_data)
+        user = self.context['request'].user
+        if not user.role == 'admin':
+            validated_data.pop('role')
+        return super().update(instance, validated_data)
 
-class UserCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = (
-            'username',
-            'email',
-        )
+
+# class UserCreateSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = User
+#         fields = (
+#             'username',
+#             'email',
+#         )
 
 
 class TokenSerializer(serializers.ModelSerializer):

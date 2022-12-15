@@ -1,11 +1,10 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import filters
-from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import (IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly, AllowAny)
+from rest_framework.decorators import action
+from rest_framework.permissions import (IsAuthenticated, AllowAny)
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+from rest_framework.viewsets import ModelViewSet
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
 from rest_framework import status
@@ -13,14 +12,39 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
-from api.v1.permissions import IsAuthorOrSAFE
-from api.v1.serializers import UserSerializer, UserCreateSerializer, TokenSerializer
+from api.v1.permissions import IsAdmin, IsModerator, IsUser
+from api.v1.serializers import UserSerializer, TokenSerializer
+from api.v1.pagination import PagePagination
 from reviews.models import User
 
 
 class UserViewSet(ModelViewSet):
+    http_method_names = ['get', 'post', 'patch', 'delete']
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = (IsAuthenticated, IsAdmin,)
+    pagination_class = PagePagination
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
+    lookup_field = 'username'
+
+    @action(
+        methods=['patch', 'get'],
+        detail=False,
+        url_path='me',
+        url_name='me',
+        permission_classes=[IsAuthenticated]
+    )
+    def get_me(self, request):
+        user = self.request.user
+        serializer = self.get_serializer(user)
+        if self.request.method == 'PATCH':
+            serializer = self.get_serializer(
+                user, data=request.data, partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        return Response(serializer.data)
 
 
 class RegistrationView(APIView):
@@ -28,7 +52,7 @@ class RegistrationView(APIView):
     http_method_names = ['post', ]
 
     def post(self, request):
-        serializer = UserCreateSerializer(data=request.data)
+        serializer = UserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         token = default_token_generator.make_token(user)

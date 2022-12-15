@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from reviews.validators import validate_username
+from reviews.validators import username_validator
 
 ADMIN = 'admin'
 MODERATOR = 'moderator'
@@ -18,7 +18,7 @@ class User(AbstractUser):
     """Кастомная модель пользователя"""
     username = models.CharField(
         'Имя пользователя',
-        validators=(validate_username,),
+        validators=(username_validator,),
         max_length=150,
         unique=True,
         blank=False,

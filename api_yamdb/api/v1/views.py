@@ -13,7 +13,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 
 from api.v1.permissions import IsAdmin, IsModerator, IsUser
-from api.v1.serializers import UserSerializer, TokenSerializer
+from api.v1.serializers import UserSerializer, UserCreateSerializer, TokenSerializer
 from api.v1.pagination import PagePagination
 from reviews.models import User
 
@@ -52,7 +52,7 @@ class RegistrationView(APIView):
     http_method_names = ['post', ]
 
     def post(self, request):
-        serializer = UserSerializer(data=request.data)
+        serializer = UserCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         token = default_token_generator.make_token(user)

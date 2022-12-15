@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 from re import fullmatch
 
 
-def validate_username(value):
+def username_validator(value):
     if value == 'me':
         raise ValidationError(
             'Имя пользователя не может быть <me>.',
@@ -14,3 +14,4 @@ def validate_username(value):
             'буквы, цифры и @/./+/-/_ знаки.',
             params={'value': value},
         )
+    return value

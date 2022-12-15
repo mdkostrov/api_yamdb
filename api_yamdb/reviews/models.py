@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from reviews.validators import validate_username
+from reviews.validators import username_validator
 
 ADMIN = 'admin'
 MODERATOR = 'moderator'
@@ -18,7 +18,7 @@ class User(AbstractUser):
     """Кастомная модель пользователя"""
     username = models.CharField(
         'Имя пользователя',
-        validators=(validate_username,),
+        validators=(username_validator,),
         max_length=150,
         unique=True,
         blank=False,
@@ -51,6 +51,11 @@ class User(AbstractUser):
         max_length=150,
         blank=True,
     )
+    confirmation_code = models.CharField(
+        'Код подтверждения',
+        max_length=150,
+        blank=True,
+    )
 
     class Meta:
         ordering = ('id',)
@@ -59,32 +64,3 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
-
-    @property
-    def is_admin(self):
-        return self.role == ADMIN
-
-    @property
-    def is_moderator(self):
-        return self.role == MODERATOR
-
-    @property
-    def is_user(self):
-        return self.role == USER
-
-
-class ConfirmationCodes(models.Model):
-    """Модель для хранения информации о кодах подтверждения.
-    Одновременно может быть только один активный код."""
-    confirmation_code = models.CharField(
-        'Код подтверждения',
-        max_length=150,
-        blank=False,
-        unique=True,
-    )
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        primary_key=True,
-    )
-

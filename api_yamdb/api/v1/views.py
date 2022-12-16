@@ -1,24 +1,25 @@
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404
-from rest_framework import filters
+from django.utils.datastructures import MultiValueDictKeyError
+from rest_framework import filters, status
 from rest_framework.decorators import action
-from rest_framework.permissions import (IsAuthenticated, AllowAny)
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
-from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import EmailMessage
-from rest_framework import status
-
 from rest_framework_simplejwt.tokens import RefreshToken
 
-
-from api.v1.permissions import IsAdmin, IsModerator, IsUser
-from api.v1.serializers import UserSerializer, UserCreateSerializer, TokenSerializer
 from api.v1.pagination import PagePagination
+from api.v1.permissions import IsAdmin, IsModerator, IsUser
+from api.v1.serializers import (TokenSerializer, UserCreateSerializer,
+                                UserSerializer)
 from reviews.models import User
 
 
 class UserViewSet(ModelViewSet):
+    """Класс для работы с моделью User с учетом разрешений.
+    Имя me зарезервировано для обработки запросов пользователей о себе."""
     http_method_names = ['get', 'post', 'patch', 'delete']
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -48,13 +49,25 @@ class UserViewSet(ModelViewSet):
 
 
 class RegistrationView(APIView):
+    """Класс для обработки запросов регистрации и получения токенов.
+    Повторный запрос на апи с данными существующего пользователя возвращает
+    новый код подтверждения."""
     permission_classes = (AllowAny,)
     http_method_names = ['post', ]
 
     def post(self, request):
-        serializer = UserCreateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        try:
+            user = User.objects.get(username=request.data['username'],
+                                    email=request.data['email'])
+            data = {
+                'username': user.username,
+                'email': user.email
+            }
+        except (KeyError, MultiValueDictKeyError, User.DoesNotExist):
+            serializer = UserCreateSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = serializer.save()
+            data = serializer.data
         token = default_token_generator.make_token(user)
         user.confirmation_code = token
         user.save()
@@ -62,13 +75,13 @@ class RegistrationView(APIView):
         email_body = (
             f'Код подтверждения регистрации: {token}'
         )
-        data = {
+        message = {
             'email_body': email_body,
             'to_email': user.email,
             'email_subject': 'Подтверждение регистрации'
         }
-        self.send_email(data)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        self.send_email(message)
+        return Response(data, status=status.HTTP_200_OK)
 
     @staticmethod
     def send_email(data):

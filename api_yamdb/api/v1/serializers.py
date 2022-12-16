@@ -1,11 +1,12 @@
 from rest_framework import serializers
 
-from reviews.validators import username_validator
 from reviews.models import User
+from reviews.validators import username_validator
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели User."""
+    """Сериализатор для модели User.
+    Пользователям запроещено изменять поле Role."""
     class Meta:
         model = User
         fields = (
@@ -27,6 +28,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
+    """Сериализатор работает с моделью User в части auth-запросов."""
     class Meta:
         model = User
         fields = (
@@ -39,6 +41,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 
 class TokenSerializer(serializers.ModelSerializer):
+    """Сериалайзер для работы с полем токен модели User."""
     username = serializers.CharField()
     confirmation_code = serializers.CharField()
 

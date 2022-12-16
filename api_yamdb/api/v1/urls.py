@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from api.v1.views import  RegistrationView, GetTokenView, UserViewSet
+from api.v1.views import GetTokenView, RegistrationView, UserViewSet
 
 router = DefaultRouter()
 router.register(
@@ -9,13 +9,6 @@ router.register(
     UserViewSet,
     basename='users',
 )
-
-# router.register(
-#     r'users/me',
-#     UserGetPatchListViewSet,
-#     basename='users-detail',
-# )
-
 
 app_name = 'api'
 

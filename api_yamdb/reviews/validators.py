@@ -1,5 +1,6 @@
-from django.core.exceptions import ValidationError
 from re import fullmatch
+
+from django.core.exceptions import ValidationError
 
 
 def username_validator(value):

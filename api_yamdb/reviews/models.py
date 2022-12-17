@@ -1,7 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-
-from reviews.validators import username_validator
+from reviews.validators import username_validator, year_validator
 
 ADMIN = 'admin'
 MODERATOR = 'moderator'
@@ -67,27 +66,27 @@ class User(AbstractUser):
 
 
 class Categories(models.Model):
-    """Модель описывающая категории"""
-    name = models.CharField(max_length=256)
+    """Модель описывающая категории."""
+    name = models.CharField(max_length=256, db_index=True)
     slug = models.CharField(max_length=50, unique=True)
 
-    def __str__(self) -> str:
-        return f'{self.name}' + f'{self.slug}'
+    # def __str__(self) -> str:
+    #     return f'{self.name} {self.slug}'
 
 
 class Genres(models.Model):
-    """Модель описывающая жанры"""
+    """Модель описывающая жанры."""
     name = models.CharField(max_length=256)
     slug = models.CharField(max_length=50, unique=True)
 
 
 class Title(models.Model):
-    "Модель описывающая тайтлы"
+    """Модель описывающая тайтлы."""
     name = models.CharField(max_length=256)
-    year = models.IntegerField()
+    year = models.IntegerField(validators=(year_validator,),)
     rating = models.IntegerField(null=True)
     description = models.TextField()
-    genres = models.ManyToManyField(Genres, through='TitleGenres')
+    genre = models.ManyToManyField(Genres, through='TitleGenres')
     category = models.ForeignKey(Categories, null=True,
                                  on_delete=models.SET_NULL,
                                  related_name='titles')
@@ -95,8 +94,5 @@ class Title(models.Model):
 
 class TitleGenres(models.Model):
     """Связующая модель для жанров и тайтлов"""
-    genre = models.ForeignKey(Genres, on_delete=models.CASCADE,
-                              default=None,
-                              related_name='genres')
-    title = models.ForeignKey(Title, on_delete=models.CASCADE,
-                              related_name='titles')
+    genre = models.ForeignKey(Genres, on_delete=models.CASCADE)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)

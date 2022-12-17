@@ -17,8 +17,8 @@ class IsAdminOrList(BasePermission):
 
         return request.method in SAFE_METHODS
 
-    def has_object_permission(self, request, view, obj):
-        return self.has_permission(request, view)
+    # def has_object_permission(self, request, view, obj):
+    #     return self.has_permission(request, view)
 
 
 class IsAdmin(BasePermission):

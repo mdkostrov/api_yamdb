@@ -1,5 +1,5 @@
-from re import fullmatch
 from datetime import date
+from re import fullmatch
 
 from django.core.exceptions import ValidationError
 

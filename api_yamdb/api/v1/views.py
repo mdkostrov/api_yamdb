@@ -1,7 +1,16 @@
+from api.v1.filters import TitleFilter
+from api.v1.mixins import ListCreateDestroyMixin
+from api.v1.pagination import PagePagination
+from api.v1.permissions import IsAdmin, IsAdminOrList, IsModerator, IsUser
+from api.v1.serializers import (CategoriesSerializer, GenresSerializer,
+                                TitleReadSerializer, TitleSerializer,
+                                TokenSerializer, UserCreateSerializer,
+                                UserSerializer)
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404
 from django.utils.datastructures import MultiValueDictKeyError
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -9,12 +18,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
-
-from api.v1.pagination import PagePagination
-from api.v1.permissions import IsAdmin, IsModerator, IsUser
-from api.v1.serializers import (TokenSerializer, UserCreateSerializer,
-                                UserSerializer)
-from reviews.models import User
+from reviews.models import Categories, Genres, Title, User
 
 
 class UserViewSet(ModelViewSet):
@@ -97,7 +101,7 @@ class GetTokenView(APIView):
     permission_classes = (AllowAny,)
     http_method_names = ('post',)
 
-    def post(self, request):
+    def post(self, request): # noqa
         serializer = TokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -111,3 +115,36 @@ class GetTokenView(APIView):
             {'confirmation_code': 'Неверный код подтверждения'},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+
+class GenresViewSet(ListCreateDestroyMixin):
+
+    queryset = Genres.objects.all()
+    serializer_class = GenresSerializer
+    permission_classes = (IsAdminOrList,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class CategoriesViewSet(ListCreateDestroyMixin):
+
+    queryset = Categories.objects.all()
+    serializer_class = CategoriesSerializer
+    permission_classes = (IsAdminOrList,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class TitleViewSet(ModelViewSet):
+
+    queryset = Title.objects.all()
+    permission_classes = (IsAdminOrList,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve',):
+            return TitleReadSerializer
+        return TitleSerializer

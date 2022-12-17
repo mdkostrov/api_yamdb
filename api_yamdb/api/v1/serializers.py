@@ -1,7 +1,8 @@
 from rest_framework import serializers
 
-from reviews.models import User
-from reviews.validators import username_validator
+from reviews.models import User, Genres, Categories, Title
+from reviews.validators import (username_validator, slug_validator,
+                                year_validator)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -51,3 +52,33 @@ class TokenSerializer(serializers.ModelSerializer):
             'username',
             'confirmation_code',
         )
+
+
+class GenresSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Genres
+        fields = ('name', 'slug')
+
+    def validate_slug(self, value):
+        return slug_validator(value)
+
+
+class CategoriesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Categories
+        fields = ('name', 'slug')
+
+    def validate_slug(self, value):
+        return slug_validator(value)
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    genre = GenresSerializer(many=True, required=False)
+    category = CategoriesSerializer(read_only=True)
+
+    class Meta:
+        model = Title
+        fields = '__all__'
+
+    def validate_year(self, value):
+        return year_validator(value)

@@ -11,10 +11,12 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from api.v1.pagination import PagePagination
-from api.v1.permissions import IsAdmin, IsModerator, IsUser
+from api.v1.permissions import IsAdmin, IsModerator, IsUser, IsAdminOrList
 from api.v1.serializers import (TokenSerializer, UserCreateSerializer,
-                                UserSerializer)
-from reviews.models import User
+                                UserSerializer, GenresSerializer,
+                                CategoriesSerializer, TitleSerializer)
+from api.v1.mixins import ListCreateDestroyMixin
+from reviews.models import User, Genres, Categories, Title
 
 
 class UserViewSet(ModelViewSet):
@@ -111,3 +113,27 @@ class GetTokenView(APIView):
             {'confirmation_code': 'Неверный код подтверждения'},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+
+class GenresViewSet(ListCreateDestroyMixin):
+
+    queryset = Genres.objects.all()
+    serializer_class = GenresSerializer
+    permission_classes = (IsAdminOrList,)
+    pagination_class = PagePagination
+
+
+class CategoriesViewSet(ListCreateDestroyMixin):
+
+    queryset = Categories.objects.all()
+    serializer_class = CategoriesSerializer
+    permission_classes = (IsAdminOrList,)
+    agination_class = PagePagination
+
+
+class TitleViewSet(ModelViewSet):
+
+    queryset = Title.objects.all()
+    serializer_class = TitleSerializer
+    permission_classes = (IsAdminOrList,)
+    pagination_class = PagePagination

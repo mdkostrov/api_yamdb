@@ -1,5 +1,7 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from reviews.models import Categories, Genres, Title, User
+from rest_framework.validators import UniqueTogetherValidator
+from reviews.models import Categories, Comment, Genres, Review, Title, User
 from reviews.validators import (slug_validator, username_validator)
 
 
@@ -99,3 +101,61 @@ class TitleSerializer(serializers.ModelSerializer):
             'id',
             'name', 'year', 'description',
             'genre', 'category', 'rating',)
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    title = serializers.SlugRelatedField(
+        slug_field='name',
+        read_only=True
+    )
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True
+    )
+
+    def validate_score(self, value):
+        if 0 > value > 10:
+            raise serializers.ValidationError(
+                'Оценка может быть только от 1 до 10!'
+            )
+        return value
+
+    def validate(self, data):
+        request = self.context['request']
+        author = request.user
+        title_id = self.context.get('view').kwargs.get('title_id')
+        title = get_object_or_404(Title, id=title_id)
+        if (
+            request.method == 'POST'
+            and Review.objects.filter(title=title, author=author).exists()
+        ):
+            raise serializers.ValidationError(
+                'Нельзя оставлять несколько отзывов на одно произведение!'
+            )
+        return data
+
+    class Meta:
+        model = Review
+        fields = '__all__'
+        validators = (
+            UniqueTogetherValidator(
+                queryset=Review.objects.all(),
+                fields=('title', 'author'),
+                message=('Отзыв уже существует!')
+            ),
+        )
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    review = serializers.SlugRelatedField(
+        slug_field='text',
+        read_only=True
+    )
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True
+    )
+
+    class Meta:
+        model = Comment
+        fields = '__all__'

@@ -74,4 +74,5 @@ http://127.0.0.1:8000/redoc/
 * [GitHub](https://github.com/notebad)
 **Иван Наливайко**
 * [GitHub](https://github.com/nemanick)
-* Студенты курса "Разработчик Python" (47 когорта).
+```
+Студенты курса "Разработчик Python" (47 когорта).

@@ -69,15 +69,12 @@ http://127.0.0.1:8000/redoc/
 ### Об авторах:
 Над проектом работали:
 **Костров Михаил (тимлид)**
-
 [GitHub](https://github.com/mdkostrov/)
 
 **Александр Морозов**
-
 [GitHub](https://github.com/notebad)
 
 **Иван Наливайко**
-
 [GitHub](https://github.com/nemanick)
 
 Студенты курса "Разработчик Python" (47 когорта).

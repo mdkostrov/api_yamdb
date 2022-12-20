@@ -1,15 +1,6 @@
-from api.v1.filters import TitleFilter
-from api.v1.mixins import ListCreateDestroyMixin
-from api.v1.pagination import PagePagination
-from api.v1.permissions import (IsAdmin, IsAdminOrList,
-                                IsAuthorOrSAFE, IsModerator)
-from api.v1.serializers import (CategoriesSerializer, CommentSerializer,
-                                GenresSerializer, ReviewSerializer,
-                                TitleReadSerializer, TitleSerializer,
-                                TokenSerializer, UserCreateSerializer,
-                                UserSerializer)
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django.utils.datastructures import MultiValueDictKeyError
 from django_filters.rest_framework import DjangoFilterBackend
@@ -20,6 +11,17 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from api.v1.filters import TitleFilter
+from api.v1.mixins import ListCreateDestroyMixin
+from api.v1.pagination import PagePagination
+from api.v1.permissions import (IsAdmin, IsAdminOrRead, IsAdminUpdate,
+                                IsAuthor, IsModerator)
+from api.v1.serializers import (CategoriesSerializer, CommentSerializer,
+                                GenresSerializer, ReviewSerializer,
+                                TitleReadSerializer, TitleSerializer,
+                                TokenSerializer, UserCreateSerializer,
+                                UserSerializer)
 from reviews.models import Categories, Genres, Review, Title, User
 
 
@@ -69,7 +71,7 @@ class RegistrationView(APIView):
                 'username': user.username,
                 'email': user.email
             }
-        except (KeyError, MultiValueDictKeyError, User.DoesNotExist):
+        except (KeyError, MultiValueDictKeyError, User.DoesNotExist): # noqa
             serializer = UserCreateSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             user = serializer.save()
@@ -100,6 +102,9 @@ class RegistrationView(APIView):
 
 
 class GetTokenView(APIView):
+    """Класс для поступающих запросов кода подтверждения.
+     Запрос с парой username/email обрабатывается и высылает
+     новый код подтверждения регистрации."""
     permission_classes = (AllowAny,)
     http_method_names = ('post',)
 
@@ -120,29 +125,33 @@ class GetTokenView(APIView):
 
 
 class GenresViewSet(ListCreateDestroyMixin):
-
-    queryset = Genres.objects.all()
+    """Класс для обработки запросов о жанрах."""
+    queryset = Genres.objects.all() # noqa
     serializer_class = GenresSerializer
-    permission_classes = (IsAdminOrList,)
+    permission_classes = (IsAdminOrRead,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
 
 
 class CategoriesViewSet(ListCreateDestroyMixin):
-
-    queryset = Categories.objects.all()
+    """Класс для обработки запросов о категориях."""
+    queryset = Categories.objects.all() # noqa
     serializer_class = CategoriesSerializer
-    permission_classes = (IsAdminOrList,)
+    permission_classes = (IsAdminOrRead,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
 
 
 class TitleViewSet(ModelViewSet):
-
-    queryset = Title.objects.all()
-    permission_classes = (IsAdminOrList,)
+    """Класс для обработки запросов о произведениях.
+    Подсчитывает средний рейтинг произведения при обращении.
+    Разрешается использование фильтра при запросе."""
+    queryset = Title.objects.all().annotate( # noqa
+        Avg("reviews__score")
+    ).order_by("name")
+    permission_classes = (IsAdminOrRead, )
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
 
@@ -153,25 +162,27 @@ class TitleViewSet(ModelViewSet):
 
 
 class ReviewViewSet(ModelViewSet):
+    """Класс для обработки запросов об отзывах на произведение.
+    Ключ произведения передается в строке запроса."""
     serializer_class = ReviewSerializer
-    permission_classes = (IsAdminOrList, IsModerator, IsAuthorOrSAFE,)
+    http_method_names = ('get', 'patch', 'delete', 'post')
+    permission_classes = [IsAuthor | IsModerator | IsAdminUpdate]
 
     def get_queryset(self):
-        title = get_object_or_404(
-            Title,
-            id=self.kwargs.get('title_id'))
+        title = get_object_or_404(Title, pk=self.kwargs.get("title_id"))
         return title.reviews.all()
 
     def perform_create(self, serializer):
-        title = get_object_or_404(
-            Title,
-            id=self.kwargs.get('title_id'))
+        title_id = self.kwargs.get('title_id')
+        title = get_object_or_404(Title, id=title_id)
         serializer.save(author=self.request.user, title=title)
 
 
 class CommentViewSet(ModelViewSet):
+    """Класс для обработки запросов о комментариях на отзывы.
+        Ключ отзыва передается в строке запроса."""
     serializer_class = CommentSerializer
-    permission_classes = (IsAdminOrList, IsModerator, IsAuthorOrSAFE,)
+    permission_classes = [IsAuthor | IsModerator | IsAdminUpdate]
 
     def get_queryset(self):
         review = get_object_or_404(

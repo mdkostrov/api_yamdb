@@ -1,7 +1,9 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from reviews.validators import username_validator, year_validator
+
+from reviews.validators import (slug_validator, username_validator,
+                                year_validator)
 
 ADMIN = 'admin'
 MODERATOR = 'moderator'
@@ -71,17 +73,27 @@ class User(AbstractUser):
 
 class Categories(models.Model):
     """Модель описывающая категории."""
-    name = models.CharField(max_length=256, db_index=True)
-    slug = models.CharField(max_length=50, unique=True)
-
-    # def __str__(self) -> str:
-    #     return f'{self.name} {self.slug}'
+    name = models.CharField(
+        max_length=256,
+        db_index=True
+    )
+    slug = models.CharField(
+        max_length=50,
+        unique=True,
+        validators=(slug_validator, )
+    )
 
 
 class Genres(models.Model):
     """Модель описывающая жанры."""
-    name = models.CharField(max_length=256)
-    slug = models.CharField(max_length=50, unique=True)
+    name = models.CharField(
+        max_length=256
+    )
+    slug = models.CharField(
+        max_length=50,
+        unique=True,
+        validators=(slug_validator, )
+    )
 
 
 class Title(models.Model):
@@ -136,6 +148,12 @@ class Review(models.Model):
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
         ordering = ('pub_date',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title', 'author'],
+                name='unique_review'
+            ),
+        ]
 
     def __str__(self):
         return self.text

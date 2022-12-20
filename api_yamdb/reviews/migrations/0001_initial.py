@@ -2,8 +2,9 @@
 
 import django.contrib.auth.models
 import django.utils.timezone
-import reviews.validators
 from django.db import migrations, models
+
+import reviews.validators
 
 
 class Migration(migrations.Migration):

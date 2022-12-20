@@ -71,7 +71,7 @@ class RegistrationView(APIView):
                 'username': user.username,
                 'email': user.email
             }
-        except (KeyError, MultiValueDictKeyError, User.DoesNotExist): # noqa
+        except (KeyError, MultiValueDictKeyError, User.DoesNotExist):  # noqa
             serializer = UserCreateSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             user = serializer.save()
@@ -108,7 +108,7 @@ class GetTokenView(APIView):
     permission_classes = (AllowAny,)
     http_method_names = ('post',)
 
-    def post(self, request): # noqa
+    def post(self, request):  # noqa
         serializer = TokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -126,7 +126,7 @@ class GetTokenView(APIView):
 
 class GenresViewSet(ListCreateDestroyMixin):
     """Класс для обработки запросов о жанрах."""
-    queryset = Genres.objects.all() # noqa
+    queryset = Genres.objects.all()  # noqa
     serializer_class = GenresSerializer
     permission_classes = (IsAdminOrRead,)
     filter_backends = (filters.SearchFilter,)
@@ -136,7 +136,7 @@ class GenresViewSet(ListCreateDestroyMixin):
 
 class CategoriesViewSet(ListCreateDestroyMixin):
     """Класс для обработки запросов о категориях."""
-    queryset = Categories.objects.all() # noqa
+    queryset = Categories.objects.all()  # noqa
     serializer_class = CategoriesSerializer
     permission_classes = (IsAdminOrRead,)
     filter_backends = (filters.SearchFilter,)
@@ -148,7 +148,7 @@ class TitleViewSet(ModelViewSet):
     """Класс для обработки запросов о произведениях.
     Подсчитывает средний рейтинг произведения при обращении.
     Разрешается использование фильтра при запросе."""
-    queryset = Title.objects.all().annotate( # noqa
+    queryset = Title.objects.all().annotate(  # noqa
         Avg("reviews__score")
     ).order_by("name")
     permission_classes = (IsAdminOrRead, )

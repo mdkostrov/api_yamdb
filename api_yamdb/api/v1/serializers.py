@@ -37,7 +37,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
             'email',
         )
 
-    def validate_username(self, value): # noqa
+    def validate_username(self, value):  # noqa
         return username_validator(value)
 
 

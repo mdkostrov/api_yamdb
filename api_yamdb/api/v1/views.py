@@ -65,8 +65,10 @@ class RegistrationView(APIView):
 
     def post(self, request):
         try:
-            user = User.objects.get(username=request.data['username'],
-                                    email=request.data['email'])
+            user = User.objects.get(
+                username=request.data['username'],
+                email=request.data['email'],
+            )
             data = {
                 'username': user.username,
                 'email': user.email
@@ -149,8 +151,8 @@ class TitleViewSet(ModelViewSet):
     Подсчитывает средний рейтинг произведения при обращении.
     Разрешается использование фильтра при запросе."""
     queryset = Title.objects.all().annotate(  # noqa
-        Avg("reviews__score")
-    ).order_by("name")
+        Avg('reviews__score')
+    ).order_by('name')
     permission_classes = (IsAdminOrRead, )
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
@@ -187,13 +189,15 @@ class CommentViewSet(ModelViewSet):
     def get_queryset(self):
         review = get_object_or_404(
             Review,
-            id=self.kwargs.get('review_id')
+            id=self.kwargs.get('review_id'),
+            title__id=self.kwargs.get('title_id')
         )
         return review.comments.all()
 
     def perform_create(self, serializer):
         review = get_object_or_404(
             Review,
-            id=self.kwargs.get('review_id')
+            id=self.kwargs.get('review_id'),
+            title__id=self.kwargs.get('title_id')
         )
         serializer.save(author=self.request.user, review=review)

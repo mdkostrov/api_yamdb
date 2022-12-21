@@ -47,8 +47,8 @@ class IsModerator(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return (request.method in SAFE_METHODS
-                or request.user.role == 'moderator')
+                or request.user.is_moderator)
 
 
 def is_admin(user):
-    return user.role == 'admin' or user.is_superuser
+    return user.is_admin or user.is_superuser

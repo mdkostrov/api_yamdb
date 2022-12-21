@@ -23,6 +23,9 @@ from api.v1.serializers import (CategoriesSerializer, CommentSerializer,
                                 TokenSerializer, UserCreateSerializer,
                                 UserSerializer)
 from reviews.models import Categories, Genres, Review, Title, User
+from api_yamdb.settings import DOMAIN_NAME
+
+FROM_EMAIL = f'noreply@{DOMAIN_NAME}'
 
 
 class UserViewSet(ModelViewSet):
@@ -71,7 +74,7 @@ class RegistrationView(APIView):
             )
             data = {
                 'username': user.username,
-                'email': user.email
+                'email': user.email,
             }
         except (KeyError, MultiValueDictKeyError, User.DoesNotExist):  # noqa
             serializer = UserCreateSerializer(data=request.data)
@@ -98,7 +101,8 @@ class RegistrationView(APIView):
         email = EmailMessage(
             subject=data['email_subject'],
             body=data['email_body'],
-            to=[data['to_email']]
+            to=[data['to_email']],
+            from_email=FROM_EMAIL,
         )
         email.send()
 

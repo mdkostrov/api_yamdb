@@ -84,6 +84,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+DOMAIN_NAME = 'domain.org'
 
 LANGUAGE_CODE = 'en-us'
 
